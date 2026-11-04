@@ -1,31 +1,31 @@
 id,question,category_code,duplicate_group,split
-1,비밀번호를 바꾸고 싶어요,ACCOUNT,G01,test
-2,비번 변경은 어디서 하나요?,ACCOUNT,G01,test
-3,비밀번호를 잊어버렸어요,ACCOUNT,G02,test
-4,비번이 기억이 안 나서 로그인을 못 해요,ACCOUNT,G02,test
-5,계정 암호를 재설정하고 싶어요,ACCOUNT,G02,test
-6,회원 탈퇴하고 싶어요,ACCOUNT,G03,tune
-7,계정을 삭제하려면 어떻게 하나요?,ACCOUNT,G03,tune
-8,내가 주문한 내역을 보고 싶어요,ORDER,G04,tune
-9,주문 목록은 어디서 확인해요?,ORDER,G04,tune
-10,어떤 결제 수단을 쓸 수 있나요?,PAYMENT,G05,tune
-11,카드 말고 다른 결제 방법도 있나요?,PAYMENT,G05,tune
-12,주문한 상품이 지금 어디쯤 왔나요?,SHIPPING,G06,tune
-13,배송 조회는 어떻게 하나요?,SHIPPING,G06,tune
-14,택배 운송장 번호를 확인하고 싶어요,SHIPPING,G06,tune
-15,배송 주소를 바꿀 수 있나요?,SHIPPING,G07,tune
-16,주문 후에 받는 곳을 변경하고 싶어요,SHIPPING,G07,tune
-17,주문하면 며칠 만에 도착하나요?,SHIPPING,G08,tune
-18,배송은 보통 얼마나 걸려요?,SHIPPING,G08,tune
-19,주문을 취소하고 싶어요,CANCEL,G09,tune
-20,방금 결제한 주문 취소할 수 있나요?,CANCEL,G09,tune
-21,주문 철회는 어떻게 하나요?,CANCEL,G09,tune
-22,받은 상품을 반품하고 싶어요,RETURN,G10,test
-23,물건을 돌려보내려면 어떻게 해야 하나요?,RETURN,G10,test
-24,사이즈가 안 맞아서 교환하고 싶어요,RETURN,G11,test
-25,다른 색상으로 바꿀 수 있나요?,RETURN,G11,test
-26,환불은 언제 들어오나요?,REFUND,G12,test
-27,반품했는데 돈이 아직 안 들어왔어요,REFUND,G12,test
-28,환불 처리 기간이 얼마나 걸리나요?,REFUND,G12,test
-29,쿠폰은 어떻게 쓰나요?,COUPON,G13,tune
-30,결제할 때 쿠폰 넣는 곳이 어디예요?,COUPON,G13,tune
+1,요금제 바꾸고 싶어요,PLAN_CHANGE,G01,test
+2,다른 요금제로 변경할 수 있나요?,PLAN_CHANGE,G01,test
+3,지금 쓰는 요금제를 더 싼 걸로 바꾸려면 어떻게 해요?,PLAN_CHANGE,G01,test
+4,요금 납부일을 바꾸고 싶어요,PAYMENT_METHOD,G02,test
+5,매달 요금 빠져나가는 날짜를 25일로 변경할 수 있나요?,PAYMENT_METHOD,G02,test
+6,자동이체 계좌를 다른 은행으로 바꾸고 싶어요,PAYMENT_METHOD,G03,tune
+7,요금 내는 카드를 변경하려면 어떻게 하나요?,PAYMENT_METHOD,G03,tune
+8,이번 달 요금이 얼마 나왔는지 알고 싶어요,BILL_INQUIRY,G04,tune
+9,이번 달 청구 금액 확인해 주세요,BILL_INQUIRY,G04,tune
+10,이번 달 요금이 평소보다 많이 나왔어요,BILL_INQUIRY,G05,tune
+11,요금이 왜 이렇게 많이 청구됐나요?,BILL_INQUIRY,G05,tune
+12,밀린 요금을 지금 바로 내고 싶어요,BILL_PAYMENT,G06,tune
+13,미납된 요금 즉시 납부할 수 있나요?,BILL_PAYMENT,G06,tune
+14,어제 낸 요금이 납부 처리됐는지 확인하고 싶어요,BILL_PAYMENT,G07,tune
+15,요금 냈는데 정상적으로 납부됐나요?,BILL_PAYMENT,G07,tune
+16,선택약정 할인 받으려면 어떻게 신청해요?,CONTRACT_DISCOUNT,G08,tune
+17,25% 요금 할인 약정에 가입하고 싶어요,CONTRACT_DISCOUNT,G08,tune
+18,선택약정이 언제 끝나는지 알고 싶어요,CONTRACT_DISCOUNT,G09,tune
+19,할인 약정 만료일 확인해 주세요,CONTRACT_DISCOUNT,G09,tune
+20,가입된 부가서비스를 해지하고 싶어요,ADDON_SERVICE,G10,tune
+21,쓰지 않는 유료 부가서비스 끊어 주세요,ADDON_SERVICE,G10,tune
+22,제가 어떤 부가서비스에 가입되어 있는지 알고 싶어요,ADDON_SERVICE,G11,tune
+23,이용 중인 부가서비스 목록 보여 주세요,ADDON_SERVICE,G11,tune
+24,휴대폰 소액결제를 막고 싶어요,MICRO_PAYMENT,G12,test
+25,소액결제 차단 신청할 수 있나요?,MICRO_PAYMENT,G12,test
+26,휴대폰 소액결제 한도를 올리고 싶어요,MICRO_PAYMENT,G13,test
+27,소액결제 한도 늘릴 수 있나요?,MICRO_PAYMENT,G13,test
+28,휴대폰을 잃어버렸어요,SUSPEND_LOST,G14,tune
+29,폰 분실 신고하고 정지해 주세요,SUSPEND_LOST,G14,tune
+30,핸드폰을 잃어버려서 일시정지하고 싶어요,SUSPEND_LOST,G14,tune
