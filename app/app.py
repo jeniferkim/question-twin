@@ -1,18 +1,6 @@
 import gradio as gr
 
-
-def search(query: str, top_k: int = 5, threshold: float = 0.7) -> list[dict]:
-    """가짜 search(): 모델이 연결되기 전까지 쓰는 임시 함수"""
-    fake_results = [
-        {"id": 101, "question": "예시 질문 1 (가짜 데이터)", "score": 0.95, "category_code": "A01"},
-        {"id": 102, "question": "예시 질문 2 (가짜 데이터)", "score": 0.88, "category_code": "A01"},
-        {"id": 103, "question": "예시 질문 3 (가짜 데이터)", "score": 0.76, "category_code": "B02"},
-        {"id": 104, "question": "예시 질문 4 (가짜 데이터)", "score": 0.65, "category_code": "A01"},
-        {"id": 105, "question": "예시 질문 5 (가짜 데이터)", "score": 0.52, "category_code": "C03"},
-    ]
-    for r in fake_results:
-        r["is_duplicate"] = r["score"] >= threshold
-    return fake_results[:top_k]
+from src.search.search import search
 
 
 def on_search(query):
