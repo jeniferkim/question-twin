@@ -1,19 +1,56 @@
-from collections import Counter
+# 동작 방식
+# 처음 검색할 때 샘플 질문 30개를 한 번만 숫자 벡터로 바꿔 메모리에 저장
+# 새 질문도 벡터로 바꿔서 유사도 높은 순서로 5개를 고름
+# 유사도가 같으면 항상 같은 순서로 나옴
 
-FAKE_RESULTS = [
-    {"id": 1, "question": "비밀번호를 잊어버렸어요", "score": 0.91, "category_code": "ACCOUNT"},
-    {"id": 2, "question": "계정 암호를 재설정하고 싶어요", "score": 0.84, "category_code": "ACCOUNT"},
-    {"id": 3, "question": "로그인이 되지 않습니다", "score": 0.72, "category_code": "LOGIN"},
-    {"id": 4, "question": "아이디를 찾고 싶어요", "score": 0.61, "category_code": "ACCOUNT"},
-    {"id": 5, "question": "회원 탈퇴는 어떻게 하나요", "score": 0.42, "category_code": "MEMBER"},
-]
+
+import csv
+from collections import Counter
+from functools import lru_cache
+from pathlib import Path
+
+import numpy as np
+
+MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+MODEL_REVISION = "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
+DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "sample_questions.csv"
+
+
+@lru_cache(maxsize=1)
+def _load_model():
+    from sentence_transformers import SentenceTransformer
+
+    return SentenceTransformer(MODEL_NAME, revision=MODEL_REVISION, device="cpu")
+
+
+def _encode(texts):
+    return _load_model().encode(texts, normalize_embeddings=True, convert_to_numpy=True)
+
+
+@lru_cache(maxsize=1)
+def _load_index():
+    with open(DATA_PATH, encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    return rows, _encode([row["question"] for row in rows])
 
 
 def search(query, top_k=5, threshold=0.7):
-    # TODO(#7): 실제 임베딩 검색으로 교체
+    query = (query or "").strip()
+    if not query or top_k <= 0:
+        return []
+
+    rows, vectors = _load_index()
+    scores = vectors @ _encode([query])[0]
+    order = np.argsort(-scores, kind="stable")[:top_k]
     return [
-        {**item, "is_duplicate": item["score"] >= threshold}
-        for item in FAKE_RESULTS[:top_k]
+        {
+            "id": int(rows[i]["id"]),
+            "question": rows[i]["question"],
+            "score": round(float(scores[i]), 4),
+            "category_code": rows[i]["category_code"],
+            "is_duplicate": bool(scores[i] >= threshold),
+        }
+        for i in order
     ]
 
 
