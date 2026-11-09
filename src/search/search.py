@@ -14,6 +14,7 @@ import numpy as np
 MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 MODEL_REVISION = "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
 DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "sample_questions.csv"
+CODES_PATH = Path(__file__).resolve().parents[2] / "data" / "consult_codes.csv"
 
 
 @lru_cache(maxsize=1)
@@ -54,7 +55,19 @@ def search(query, top_k=5, threshold=0.7):
     ]
 
 
+@lru_cache(maxsize=1)
+def _code_names():
+    with open(CODES_PATH, encoding="utf-8") as f:
+        return {row["category_code"]: row["name"] for row in csv.DictReader(f)}
+
+
 def suggest_codes(results):
-    # TODO(#11): 동점 처리 규칙 추가
+    # 많이 나온 코드부터, 횟수가 같으면 검색 순위가 더 높은 코드부터 추천
     counts = Counter(item["category_code"] for item in results)
-    return [{"code": code, "count": count} for code, count in counts.most_common()]
+    first_rank = {}
+    for rank, item in enumerate(results):
+        first_rank.setdefault(item["category_code"], rank)
+
+    names = _code_names()
+    codes = sorted(counts, key=lambda code: (-counts[code], first_rank[code]))
+    return [{"code": code, "name": names.get(code, code), "count": counts[code]} for code in codes]
