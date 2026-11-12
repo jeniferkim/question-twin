@@ -9,6 +9,7 @@ import argparse
 import csv
 from dataclasses import dataclass
 import hashlib
+from functools import lru_cache
 import io
 import json
 from pathlib import Path
@@ -27,6 +28,7 @@ DEFAULT_INDEX = PRIVATE_ROOT / "question_twin" / "minilm_index.npz"
 COLUMNS = {"id", "question", "category_code"}
 DIM = 384
 MAX_ROWS = 25000
+MAX_QUERY_LENGTH = 500
 
 
 class IndexErrorSafe(ValueError):
@@ -45,9 +47,12 @@ class SavedIndex:
                encoder=None) -> list[dict]:
         if not isinstance(query, str) or not query.strip() or top_k <= 0:
             return []
+        query = query.strip()
+        if len(query) > MAX_QUERY_LENGTH:
+            raise IndexErrorSafe("query_too_long")
         if encoder is None:
             encoder = load_model()
-        query_vector = np.asarray(encoder.encode([query.strip()], normalize_embeddings=True,
+        query_vector = np.asarray(encoder.encode([query], normalize_embeddings=True,
                                                  convert_to_numpy=True), dtype=np.float32)
         if query_vector.shape != (1, DIM) or not np.isfinite(query_vector).all():
             raise IndexErrorSafe("invalid_query_embedding")
@@ -99,13 +104,19 @@ def _csv_rows(csv_bytes: bytes) -> list[dict]:
     return rows
 
 
-def load_model(*, allow_download: bool = False):
-    """The same MiniLM name/revision as src.search.search, CPU only."""
+@lru_cache(maxsize=2)
+def _cached_model(allow_download: bool):
+    """Reuse a CPU model per process, keeping download policy explicit."""
     from sentence_transformers import SentenceTransformer
 
     return SentenceTransformer(MODEL_NAME, revision=MODEL_REVISION, device="cpu",
                                cache_folder=str(ROOT / "scripts" / ".model_cache"),
                                local_files_only=not allow_download, trust_remote_code=False)
+
+
+def load_model(*, allow_download: bool = False):
+    """Return a cached MiniLM model; downloads require explicit opt-in."""
+    return _cached_model(allow_download)
 
 
 def _validate_arrays(index: SavedIndex) -> None:
