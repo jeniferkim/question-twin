@@ -42,6 +42,11 @@ with gr.Blocks(title="중복 질문 찾기") as demo:
         inputs=[query_box, threshold_slider],
         outputs=result_table,
     )
+    query_box.submit(
+        fn=on_search,
+        inputs=[query_box, threshold_slider],
+        outputs=result_table,
+    )
 
 if __name__ == "__main__":
     demo.launch()
