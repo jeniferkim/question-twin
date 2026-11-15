@@ -4,11 +4,13 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 import numpy as np
 
 from src.embedding.store import (
-    DIM, IndexErrorSafe, SavedIndex, _csv_rows, build_index, load_index,
+    DIM, MAX_QUERY_LENGTH, IndexErrorSafe, SavedIndex, _cached_model,
+    _csv_rows, build_index, load_index, load_model,
 )
 
 
@@ -82,6 +84,56 @@ class EmbeddingTests(unittest.TestCase):
         self.output.write_bytes(b"invalid zip bytes")
         with self.assertRaises(IndexErrorSafe):
             load_index(self.output)
+
+
+    def test_model_cache_reuses_instance_without_download(self):
+        offline_model = object()
+        downloadable_model = object()
+        _cached_model.cache_clear()
+        try:
+            with mock.patch(
+                "sentence_transformers.SentenceTransformer",
+                side_effect=[offline_model, downloadable_model],
+            ) as constructor:
+                self.assertIs(load_model(), offline_model)
+                self.assertIs(load_model(allow_download=False), offline_model)
+                self.assertIs(load_model(allow_download=True), downloadable_model)
+                self.assertIs(load_model(), offline_model)
+                self.assertEqual(constructor.call_count, 2)
+                self.assertTrue(constructor.call_args_list[0].kwargs["local_files_only"])
+                self.assertFalse(constructor.call_args_list[1].kwargs["local_files_only"])
+                self.assertFalse(constructor.call_args_list[0].kwargs["trust_remote_code"])
+                info = _cached_model.cache_info()
+                self.assertEqual(info.hits, 2)
+                self.assertEqual(info.misses, 2)
+        finally:
+            _cached_model.cache_clear()
+
+    def test_search_query_length_boundary(self):
+        build_index(self.source, self.output, encoder=self.encoder, root=self.root)
+        index = load_index(self.output, csv_path=self.source)
+        with mock.patch.object(self.encoder, "encode", wraps=self.encoder.encode) as encoded:
+            results = index.search("  " + ("가" * MAX_QUERY_LENGTH) + "  ", encoder=self.encoder)
+            self.assertEqual(len(results), 2)
+            encoded.assert_called_once()
+            self.assertEqual(encoded.call_args.args[0], ["가" * MAX_QUERY_LENGTH])
+        with mock.patch.object(self.encoder, "encode", wraps=self.encoder.encode) as encoded:
+            with self.assertRaisesRegex(IndexErrorSafe, "query_too_long"):
+                index.search("가" * (MAX_QUERY_LENGTH + 1), encoder=self.encoder)
+            encoded.assert_not_called()
+
+    def test_search_result_contract_after_limit(self):
+        build_index(self.source, self.output, encoder=self.encoder, root=self.root)
+        index = load_index(self.output, csv_path=self.source)
+        query = "휴대폰 요금제를 변경하고 싶어요"
+        first = index.search(query, encoder=self.encoder)
+        second = index.search(query, encoder=self.encoder)
+        self.assertEqual(first, second)
+        self.assertEqual(first[0]["id"], 100)
+        self.assertEqual(
+            set(first[0]),
+            {"id", "question", "score", "category_code", "is_duplicate"},
+        )
 
 
 if __name__ == "__main__":
