@@ -9,6 +9,7 @@
    - Top 1 정확도: 1등이 같은 묶음(duplicate_group)인 비율
    - Top 5 포함률: 5개 안에 같은 묶음이 하나라도 있는 비율
    - 결과는 eval/results/sample_metrics.md에도 저장한다. (직접 만든 문장이라 올려도 됨)
+   - 1등이 틀린 사례와 유형은 eval/results/sample_errors.md에 저장한다.
 
 2) 실데이터 (data/raw/question_twin/questions.csv가 있을 때만)
    - 질문 하나씩 넣고 나머지에서 Top 5를 검색한다.
@@ -31,7 +32,10 @@ from eval.tfidf_baseline import similarity_matrix
 ROOT = Path(__file__).resolve().parents[1]
 REAL_DATA = ROOT / "data" / "raw" / "question_twin" / "questions.csv"
 SAMPLE_RESULT = ROOT / "eval" / "results" / "sample_metrics.md"
+SAMPLE_ERRORS = ROOT / "eval" / "results" / "sample_errors.md"
 TOP_K = 5
+SAME_CODE = "같은 상담 코드, 다른 요청"
+OTHER_CODE = "다른 상담 코드"
 
 
 def minilm_similarity(texts):
@@ -98,6 +102,47 @@ def same_label_ratios(neighbors, labels):
     return ratios
 
 
+def top1_errors(neighbors, rows):
+    """1등이 같은 묶음이 아닌 질문들: (질문 번호, 1등 번호, 유형) 목록"""
+    errors = []
+    for i, top in enumerate(neighbors):
+        first = top[0]
+        if rows[first]["duplicate_group"] == rows[i]["duplicate_group"]:
+            continue
+        if rows[first]["category_code"] == rows[i]["category_code"]:
+            kind = SAME_CODE
+        else:
+            kind = OTHER_CODE
+        errors.append((i, first, kind))
+    return errors
+
+
+def error_report(name, errors, rows):
+    kinds = Counter()
+    for _, _, kind in errors:
+        kinds[kind] += 1
+
+    summary = []
+    summary.append(f"### {name}: 1등이 틀린 질문 {len(errors)}개")
+    summary.append("")
+    summary.append("| 유형 | 개수 |")
+    summary.append("| --- | ---: |")
+    summary.append(f"| {SAME_CODE} | {kinds[SAME_CODE]} |")
+    summary.append(f"| {OTHER_CODE} | {kinds[OTHER_CODE]} |")
+
+    cases = []
+    cases.append("")
+    cases.append("| 질문 | 1등으로 나온 질문 | 유형 |")
+    cases.append("| --- | --- | --- |")
+    for i, first, kind in errors:
+        query = rows[i]
+        found = rows[first]
+        cases.append(f"| {query['question']} ({query['duplicate_group']}, {query['category_code']}) "
+                     f"| {found['question']} ({found['duplicate_group']}, {found['category_code']}) "
+                     f"| {kind} |")
+    return summary, cases
+
+
 def random_group_rates(groups, k):
     """무작위로 k개를 골랐을 때 (Top 1 정확도, Top k 포함률)의 기댓값"""
     count = len(groups)
@@ -143,14 +188,22 @@ def evaluate_sample(path):
     lines.append("")
     lines.append("| 방법 | Top 1 정확도 | Top 5 포함률 |")
     lines.append("| --- | ---: | ---: |")
+    summaries = []
+    details = []
     for name, similarity in METHODS:
         neighbors = top_neighbors(similarity(texts), TOP_K)
         top1, topk = group_hits(neighbors, groups)
         lines.append(f"| {name} | {percent(top1 / count)} ({top1}/{count}) "
                      f"| {percent(topk / count)} ({topk}/{count}) |")
+        summary, cases = error_report(name, top1_errors(neighbors, rows), rows)
+        summaries.extend(summary)
+        summaries.append("")
+        details.extend(summary)
+        details.extend(cases)
+        details.append("")
     random_top1, random_topk = random_group_rates(groups, TOP_K)
     lines.append(f"| 무작위 | {percent(random_top1)} | {percent(random_topk)} |")
-    return lines
+    return lines, summaries, details
 
 
 def evaluate_real(path):
@@ -209,15 +262,22 @@ def main():
     parser.add_argument("--real", default=str(REAL_DATA), help="실데이터 질문 CSV (없으면 건너뜀)")
     args = parser.parse_args()
 
-    sample_lines = evaluate_sample(args.sample)
+    sample_lines, error_summaries, error_details = evaluate_sample(args.sample)
     SAMPLE_RESULT.parent.mkdir(parents=True, exist_ok=True)
     with open(SAMPLE_RESULT, "w", encoding="utf-8") as f:
         f.write("# 샘플 평가 결과\n\n")
         f.write("`python -m eval.evaluate`로 생성\n\n")
         f.write("\n".join(sample_lines) + "\n")
+    with open(SAMPLE_ERRORS, "w", encoding="utf-8") as f:
+        f.write("# 샘플 오류 사례\n\n")
+        f.write("`python -m eval.evaluate`로 생성. 질문 하나씩 넣었을 때 1등으로 나온 질문이 같은 묶음이 아닌 경우\n\n")
+        f.write("- 같은 상담 코드, 다른 요청: 주제는 같지만 필요한 답이 다른 질문을 1등으로 고름\n")
+        f.write("- 다른 상담 코드: 표현만 겹치는 다른 주제의 질문을 1등으로 고름\n\n")
+        f.write("\n".join(error_details) + "\n")
     print("\n".join(sample_lines))
     print()
-    print(f"(저장: {SAMPLE_RESULT.relative_to(ROOT)})")
+    print("\n".join(error_summaries))
+    print(f"(저장: {SAMPLE_RESULT.relative_to(ROOT)}, {SAMPLE_ERRORS.relative_to(ROOT)})")
     print()
 
     real_path = Path(args.real)
