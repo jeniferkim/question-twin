@@ -1,11 +1,14 @@
 import gradio as gr
 
-from src.search.search import search
+from src.search.search import MAX_QUERY_LENGTH, search
 
 
 def on_search(query, threshold):
     if not query or not query.strip():
         gr.Warning("질문을 입력해 주세요.")
+        return []
+    if len(query.strip()) > MAX_QUERY_LENGTH:
+        gr.Warning(f"질문은 {MAX_QUERY_LENGTH}자 이하로 입력해 주세요.")
         return []
 
     results = search(query, top_k=5, threshold=threshold)
