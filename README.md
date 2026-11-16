@@ -1,5 +1,76 @@
 # 표현이 다른 중복 질문 찾기
 
+## 프로젝트 개요
+
+통신 상담 질문 중 **표현은 다르지만 같은 요청인 질문**을 찾아 주는 검색 데모입니다.
+
+- 질문을 입력하면 기존 질문 중 의미가 비슷한 질문 5개와 유사도 점수를 보여 줍니다.
+- 유사도가 기준값(기본 0.7, 화면에서 조절 가능) 이상이면 중복 후보로 표시합니다. 기준값은 아직 평가로 정하지 않은 임시값이라 중복 표시는 참고용입니다.
+- 검색 결과에 많이 나온 상담 코드를 **사용자 검토용 후보**로 추천합니다.
+- 문장 임베딩 모델: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
+- 데이터: 직접 만든 샘플 질문 30개(`data/sample_questions.csv`)와 AI Hub 「민간 민원 상담 LLM 사전학습 및 Instruction Tuning 데이터」 중 통신 상담에서 검수한 질문 (실데이터는 저장소에 올리지 않음)
+
+## 폴더 구조
+
+| 폴더 | 내용 |
+|---|---|
+| `app/` | Gradio 화면 |
+| `src/search/` | 유사 질문 검색, 상담 코드 추천 |
+| `src/data/` | AI Hub 원본 읽기, 검수 후보 추출 |
+| `src/embedding/` | 실데이터 임베딩 저장·불러오기 |
+| `data/` | 샘플 질문, 상담 코드 목록 |
+| `eval/` | 정답 데이터 검수, TF-IDF 비교 모델, 성능 평가와 결과 |
+| `scripts/` | MiniLM 설치·실행 확인 도구 (Windows) |
+| `tests/` | 단위 테스트 |
+| `docs/` | 입출력 규칙, 중복 판정 기준, 데이터·임베딩 문서 |
+
+## 실행 순서
+
+Python 3.10 이상이 필요합니다. 아래 명령은 모두 저장소 최상위 폴더에서 실행합니다.
+
+1. 저장소 받기
+
+```bash
+git clone https://github.com/jeniferkim/question-twin.git
+cd question-twin
+```
+
+2. 가상환경 만들고 켜기
+
+```bash
+# Windows (명령 프롬프트)
+py -m venv .venv
+.venv\Scripts\activate
+
+# macOS
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+3. 패키지 설치
+
+```bash
+pip install -r requirements.txt
+```
+
+4. 화면 실행
+
+```bash
+python -m app.app
+```
+
+브라우저에서 `http://127.0.0.1:7860`을 엽니다. 처음 검색할 때 MiniLM 모델을 내려받아서 시간이 걸릴 수 있습니다.
+
+- 실데이터 임베딩(`data/embeddings/question_twin/minilm_index.npz`)이 있으면 실데이터로, 없으면 샘플 30개로 검색합니다.
+- 실데이터가 있어도 샘플로 검색하려면 실행 전에 환경 변수를 설정합니다. (Windows 명령 프롬프트: `set QUESTION_TWIN_DATA=sample`, macOS: `export QUESTION_TWIN_DATA=sample`)
+- 실데이터 준비 방법은 [`docs/local_data_embedding_guide.md`](docs/local_data_embedding_guide.md)를 참고합니다.
+
+5. 테스트 실행 (선택)
+
+```bash
+python -m unittest discover -s tests -v
+```
+
 ## 협업 규칙
 
 ### 작업 순서
