@@ -2,8 +2,9 @@ import unittest
 
 import numpy as np
 
-from eval.evaluate import (group_hits, random_group_rates, random_label_ratio,
-                           same_label_ratios, top_neighbors)
+from eval.evaluate import (OTHER_CODE, SAME_CODE, group_hits, random_group_rates,
+                           random_label_ratio, same_label_ratios, top1_errors,
+                           top_neighbors)
 
 # 질문 4개: 0·1이 같은 묶음, 2·3이 같은 묶음
 SIMILARITY = np.array([
@@ -32,6 +33,16 @@ class EvaluateTests(unittest.TestCase):
     def test_same_label_ratios(self):
         neighbors = top_neighbors(SIMILARITY, 2)
         self.assertEqual(same_label_ratios(neighbors, GROUPS), [0.5, 0.5, 0.5, 0.5])
+
+    def test_top1_error_kinds(self):
+        rows = [
+            {"duplicate_group": "G01", "category_code": "A"},
+            {"duplicate_group": "G01", "category_code": "A"},
+            {"duplicate_group": "G02", "category_code": "A"},
+            {"duplicate_group": "G03", "category_code": "B"},
+        ]
+        neighbors = [[2], [0], [1], [0]]
+        self.assertEqual(top1_errors(neighbors, rows), [(0, 2, SAME_CODE), (2, 1, SAME_CODE), (3, 0, OTHER_CODE)])
 
     def test_random_baselines(self):
         top1, topk = random_group_rates(GROUPS, 2)
