@@ -1,4 +1,4 @@
-# Intel 맥(macOS x86_64)은 PyTorch 2.2.2까지만 설치돼서 호환 버전으로 고정
+# Intel Mac (macOS x86_64): PyTorch only supports up to 2.2.2, so compatible versions are pinned
 torch==2.2.2; sys_platform == "darwin" and platform_machine == "x86_64"
 numpy<2; sys_platform == "darwin" and platform_machine == "x86_64"
 transformers==4.46.3; sys_platform == "darwin" and platform_machine == "x86_64"

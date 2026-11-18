@@ -10,6 +10,12 @@
 - 문장 임베딩 모델: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
 - 데이터: 직접 만든 샘플 질문 30개(`data/sample_questions.csv`)와 AI Hub 「민간 민원 상담 LLM 사전학습 및 Instruction Tuning 데이터」 중 통신 상담에서 검수한 질문 (실데이터는 저장소에 올리지 않음)
 
+## 데모
+
+![검색 화면](docs/demo.png)
+
+샘플 질문을 눌러 검색한 화면입니다. (샘플 데이터 기준, 실데이터 화면은 공개하지 않음)
+
 ## 폴더 구조
 
 | 폴더 | 내용 |
@@ -23,6 +29,23 @@
 | `scripts/` | MiniLM 설치·실행 확인 도구 (Windows) |
 | `tests/` | 단위 테스트 |
 | `docs/` | 입출력 규칙, 중복 판정 기준, 데이터·임베딩 문서 |
+
+## 사용한 패키지와 버전
+
+`pip install -r requirements.txt`로 한 번에 설치합니다. 아래 버전은 Windows, Python 3.12.2 환경에서 실행을 확인한 버전입니다.
+
+| 패키지 | 버전 | 용도 |
+|---|---|---|
+| Python | 3.12.2 | |
+| `gradio` | 6.31.0 | 검색 화면 |
+| `sentence-transformers` | 6.2.0 | MiniLM 문장 임베딩 |
+| `torch` | 2.15.0 | `sentence-transformers` 실행 (CPU) |
+| `transformers` | 5.22.1 | `sentence-transformers` 실행 |
+| `scikit-learn` | 1.9.1 | TF-IDF 비교 모델 (`eval/`) |
+| `numpy` | 2.5.4 | 유사도 계산 |
+| `pandas` | 3.1.0 | `requirements.txt`에 포함 |
+
+Intel 맥(macOS x86_64)은 PyTorch 호환 문제로 일부 패키지 버전이 `requirements.txt`에 따로 고정되어 있습니다.
 
 ## 실행 순서
 
@@ -70,6 +93,13 @@ python -m app.app
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## 참고 자료
+
+- 데이터: [AI Hub 「민간 민원 상담 LLM 사전학습 및 Instruction Tuning 데이터」](https://aihub.or.kr/aihubdata/data/view.do?dataSetSn=71844&currMenu=115&topMenu=100) — 과학기술정보통신부·한국지능정보사회진흥원 AI 학습용 데이터 구축 사업 결과물
+- 모델: [sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2) (Apache-2.0)
+- 논문: Nils Reimers, Iryna Gurevych, [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084), 2019
+- 라이브러리: [Sentence Transformers](https://www.sbert.net), [Gradio](https://www.gradio.app), [scikit-learn](https://scikit-learn.org), [PyTorch](https://pytorch.org)
 
 ## 협업 규칙
 
